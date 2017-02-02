@@ -19,6 +19,8 @@ printLine :: P.PDBLine -> IO ()
 printLine pdbLine = do
   putStr "name: "
   print $ P.lineHeader pdbLine
+  putStr "num: "
+  print $ P.lineNum pdbLine
   putStr "seq:  "
   print $ P.lineText pdbLine
   putStr "======\n"
