@@ -14,5 +14,5 @@ someFunc = putStrLn "someFunc"
 loadFromCypher :: BoltCfg -> Text -> IO ()
 loadFromCypher cfg cypherQuery = do
   pipe <- connect cfg
-  run pipe $ query cypherQuery
+  _ <- run pipe $ query cypherQuery
   close pipe

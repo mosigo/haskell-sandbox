@@ -17,7 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Neo4j
                      , Parser.Fasta
-                     , Parser.PDB 
+                     , Parser.PDB
   build-depends:       base >= 4.7 && < 5
                      , hasbolt
                      , text
@@ -27,7 +27,7 @@ library
 
 executable neo4j-load
   hs-source-dirs:      app
-  main-is:             Main.hs
+  main-is:             Neo4jLoad.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , haskell-sandbox
