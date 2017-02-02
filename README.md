@@ -15,5 +15,5 @@ Usage
 -----
 To load data from cypher file:
 ```
-stack exec -- neo4j-load <file_path>
+stack exec neo4j-load <file_path>
 ```
