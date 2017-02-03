@@ -3,9 +3,9 @@ module Parser.Fasta
     , fastaParser
     ) where
 
-import Text.Parsec (many, char, noneOf, newline, letter)
-import Text.Parsec.Text (Parser)
-import Data.Text as T (Text, strip, pack, concat)
+import Text.Parsec          (many, many1, char, noneOf, newline, letter, spaces)
+import Text.Parsec.Text     (Parser)
+import Data.Text as T       (Text, strip, pack, concat)
 
 data FastaSequence = FastaSequence { name :: Text
                                    , seq  :: Text
@@ -21,16 +21,10 @@ nameP :: Parser Text
 nameP = strip <$> (T.pack <$> nameP')
 
 nameP' :: Parser String
-nameP' =  char '>' *> simpleSpaces *> many (noneOf ['\n']) <* newline
+nameP' =  char '>' *> many (noneOf ['\n']) <* newline
 
 sequenceP :: Parser Text
 sequenceP = T.concat <$> many lineP
 
 lineP :: Parser Text
-lineP = T.pack <$> many letter <* simpleSpaces <* newline
-
-simpleSpace :: Parser Char
-simpleSpace = char ' '
-
-simpleSpaces :: Parser String
-simpleSpaces = many simpleSpace
+lineP = T.pack <$> many1 letter <* spaces
