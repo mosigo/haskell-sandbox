@@ -12,15 +12,8 @@ main = do
   result $ parse pdbLinesParser "pdb parser" contents
 
 result :: (Show a) => Either a [PDBLine] -> IO ()
-result (Left err)        = putStr "Parse error: " >> print err
+result (Left err)       = putStr "Parse error: " >> print err
 result (Right pdbLines) = mconcat $ printLine <$> pdbLines
 
 printLine :: P.PDBLine -> IO ()
-printLine pdbLine = do
-  putStr "name: "
-  print $ P.lineHeader pdbLine
-  putStr "num: "
-  print $ P.lineNum pdbLine
-  putStr "seq:  "
-  print $ P.lineText pdbLine
-  putStr "======\n"
+printLine = print

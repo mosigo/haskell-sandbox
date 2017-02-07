@@ -21,5 +21,5 @@ runQuery :: Pipe -> (Text, Int) -> IO ()
 runQuery pipe (cypherQuery, queryNum)
   | T.length (T.strip cypherQuery) == 0 = putStrLn "Empty string"
   | otherwise                           = do
-    _ <- run pipe $ query cypherQuery
-    putStrLn $ "query " ++ show queryNum
+     _ <- run pipe $ query cypherQuery
+     putStrLn $ "query " ++ show queryNum
