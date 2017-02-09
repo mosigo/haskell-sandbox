@@ -16,4 +16,4 @@ main = do
   loadFromCypher conf contents
   putStrLn "Finished"
   where
-    conf = def { host="192.168.40.166", user="neo4j", password="lvbm123" }
+    conf = def { host="192.168.40.102", user="neo4j", password="lvbm123" }
