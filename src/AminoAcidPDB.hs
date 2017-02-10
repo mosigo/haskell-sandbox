@@ -40,7 +40,7 @@ pdbLineToAtom line = (atomType, coordinates)
 pdbLinesToAmino :: [PDBLine] -> HydratedAminoAcid
 pdbLinesToAmino list =
   AminoAcid { nitro       = Hydrated (atomByName N) (findHydrogens [H, H1, H2, H3] convertedList)
-            , carbonAlpha = Hydrated (atomByName CA) (findHydrogens [HA, HA2, HA3] convertedList) 
+            , carbonAlpha = Hydrated (atomByName CA) (findHydrogens [HA, HA2, HA3] convertedList)
             , carbon      = Hydrated (atomByName C)  []
             , oxi2        = Hydrated (atomByName O)  []
             , oxi         = Nothing -- TODO: FIX ME
@@ -51,9 +51,6 @@ pdbLinesToAmino list =
 
 findHydrogens :: [AtomType] -> [(AtomType, V3 Float)] -> [V3 Float]
 findHydrogens hydrogens atoms = catMaybes $ (`lookup` atoms) <$> hydrogens
--- findNitroHydrogens atoms = case lookup H atoms of
---   Just coords -> [coords]
---   Nothing     -> [findAtom atoms H1, findAtom atoms H2, findAtom atoms H3]
 
 findAtom :: [(AtomType, V3 Float)] -> AtomType -> V3 Float
 findAtom atoms atomType = fromMaybe
@@ -95,7 +92,7 @@ pdbLinesToRadical "TYR" atoms = Tyrosine
   (Hydrated (findAtom atoms CG) [])
   (Hydrated (findAtom atoms CD1) [findAtom atoms HD1])
   (Hydrated (findAtom atoms CE1) [findAtom atoms HE1])
-  (Hydrated (findAtom atoms CZ) [findAtom atoms HZ])
+  (Hydrated (findAtom atoms CZ) [])
   (Hydrated (findAtom atoms CE2) [findAtom atoms HE2])
   (Hydrated (findAtom atoms CD2) [findAtom atoms HD2])
   (Hydrated (findAtom atoms OH) [findAtom atoms HH])
