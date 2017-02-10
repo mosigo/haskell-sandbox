@@ -7,6 +7,7 @@ module AminoAcid
         , atomCoordinates
         , atomHydrogens
         , connections
+        , atoms
         ) where
 
 import Linear.V3 (V3)
@@ -65,6 +66,29 @@ data AtomType = N   | CA  | C   | O  | OXT
   deriving (Show, Read, Eq)
 
 type HydratedAminoAcid = AminoAcid (Hydrated (V3 Float))
+
+atoms :: HydratedAminoAcid -> [AtomType]
+atoms aminoacid = [N, CA, C, O] ++ case radical aminoacid of
+  Alanine       {} -> [CB]
+  Glysine       {} -> []
+  Valine        {} -> [CB]
+  Isoleucine    {} -> [CB, CG1, CG2, CD1]
+  Leucine       {} -> [CB, CG, CD1, CD2]
+  Methionine    {} -> [CB, CG, SD, CE]
+  Phenylalanine {} -> [CB, CG, CD1, CD2, CE1, CE2, CZ]
+  Tyrosine      {} -> [CB, CG, CD1, CD2, CE1, CE2, CZ, OH]
+  Tryptophan    {} -> [CB, CG, CD1, CD2, NE1, CE2, CE3, CZ2, CZ3, CH2]
+  Serine        {} -> [CB, OG]
+  Threonine     {} -> [CB, OG1, CG2]
+  Asparagine    {} -> [CB, CG, OD1, ND2]
+  Glutamine     {} -> [CB, CG, CD, OE1, NE2]
+  Cysteine      {} -> [CB, SG]
+  Proline       {} -> [CB, CG, CD]
+  Arginine      {} -> [CB, CG, CD, NE, CZ, NH1, NH2]
+  Histidine     {} -> [CB, CG, ND1, CD2, CE1, NE2]
+  Lysine        {} -> [CB, CG, CD, CE, NZ]
+  AsparticAcid  {} -> [CB, CG, OD1, OD2]
+  GlutamicAcid  {} -> [CB, CG, CD, OE1, OE2]
 
 atomCoordinates :: HydratedAminoAcid -> AtomType -> V3 Float
 atomCoordinates aminoAcid atomType =
