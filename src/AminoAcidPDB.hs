@@ -9,7 +9,6 @@ import Parser.PDB (PDBLine (..), pdbLinesParser)
 import Text.Parsec.Text (Parser)
 import Data.Text (unpack)
 import Data.Maybe (fromMaybe, catMaybes)
-import Debug.Trace (trace)
 
 pdbAminoParser :: Parser [HydratedAminoAcid]
 pdbAminoParser = pdbLinesToAminos <$> pdbLinesParser
@@ -54,7 +53,7 @@ createHydrated atoms O = Hydrated (findAtom atoms O) []
 createHydrated atoms atomType = Hydrated (findAtom atoms atomType) (findHydrogensForAtom atoms atomType)
 
 findHydrogensForAtom :: [(String, V3 Float)] -> AtomType -> [V3 Float]
-findHydrogensForAtom atoms atomType = trace (show hydrogens) (findHydrogens atoms hydrogens)
+findHydrogensForAtom atoms atomType = findHydrogens atoms hydrogens
   where (_:atomCode) = show atomType
         hydrogens    = (('H' : atomCode) ++) <$> ["", "1", "2", "3"]
 
