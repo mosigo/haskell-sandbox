@@ -9,6 +9,7 @@ import Parser.PDB (PDBLine (..), pdbLinesParser)
 import Text.Parsec.Text (Parser)
 import Data.Text (unpack)
 import Data.Maybe (fromMaybe, catMaybes)
+import Debug.Trace (trace)
 
 pdbAminoParser :: Parser [HydratedAminoAcid]
 pdbAminoParser = pdbLinesToAminos <$> pdbLinesParser
@@ -38,27 +39,27 @@ pdbLineToAtom line = (atomType, coordinates)
 
 pdbLinesToAmino :: [PDBLine] -> HydratedAminoAcid
 pdbLinesToAmino list =
-  AminoAcid { nitro       = createHydrated N convertedList
-            , carbonAlpha = createHydrated CA convertedList
-            , carbon      = createHydrated C convertedList
-            , oxi2        = createHydrated O convertedList
+  AminoAcid { nitro       = createHydrated convertedList N
+            , carbonAlpha = createHydrated convertedList CA
+            , carbon      = createHydrated convertedList C
+            , oxi2        = createHydrated convertedList O
             , oxi         = Nothing -- TODO: FIX ME
             , radical     = pdbLinesToRadical (unpack . atomResName $ head list) convertedList
             }
   where convertedList = pdbLineToAtom <$> list
 
-createHydrated :: AtomType -> [(String, V3 Float)] -> Hydrated (V3 Float)
-createHydrated C atoms = Hydrated (findAtom atoms C) []
-createHydrated O atoms = Hydrated (findAtom atoms O) []
-createHydrated atomType atoms = Hydrated (findAtom atoms atomType) (findHydrogensForAtom atoms atomType)
+createHydrated ::  [(String, V3 Float)] -> AtomType -> Hydrated (V3 Float)
+createHydrated atoms C = Hydrated (findAtom atoms C) []
+createHydrated atoms O = Hydrated (findAtom atoms O) []
+createHydrated atoms atomType = Hydrated (findAtom atoms atomType) (findHydrogensForAtom atoms atomType)
 
 findHydrogensForAtom :: [(String, V3 Float)] -> AtomType -> [V3 Float]
-findHydrogensForAtom atoms atomType = findHydrogens hydrogens atoms
+findHydrogensForAtom atoms atomType = trace (show hydrogens) (findHydrogens atoms hydrogens)
   where (_:atomCode) = show atomType
-        hydrogens    = (atomCode ++) <$> ["", "1", "2", "3"]
+        hydrogens    = (('H' : atomCode) ++) <$> ["", "1", "2", "3"]
 
-findHydrogens :: [String] -> [(String, V3 Float)] -> [V3 Float]
-findHydrogens hydrogens atoms = catMaybes $ (`lookup` atoms) <$> hydrogens
+findHydrogens :: [(String, V3 Float)] -> [String] -> [V3 Float]
+findHydrogens atoms hydrogens = catMaybes $ (`lookup` atoms) <$> hydrogens
 
 findAtom :: [(String, V3 Float)] -> AtomType -> V3 Float
 findAtom atoms atomType = fromMaybe
@@ -66,110 +67,24 @@ findAtom atoms atomType = fromMaybe
   (lookup (show atomType) atoms)
 
 pdbLinesToRadical :: String -> [(String, V3 Float)] -> Radical (Hydrated (V3 Float))
-pdbLinesToRadical "ALA" atoms = Alanine (createHydrated CB atoms)
+pdbLinesToRadical "ALA" atoms = createHydrated atoms <$> Alanine CB
 pdbLinesToRadical "GLY" _     = Glysine
-pdbLinesToRadical "VAL" atoms = Valine
-  (createHydrated CB atoms)
-  (createHydrated CG1 atoms)
-  (createHydrated CG2 atoms)
-pdbLinesToRadical "ILE" atoms = Isoleucine
-  (createHydrated CB atoms)
-  (createHydrated CG1 atoms)
-  (createHydrated CG2 atoms)
-  (createHydrated CD1 atoms)
-pdbLinesToRadical "LEU" atoms = Leucine
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated CD1 atoms)
-  (createHydrated CD2 atoms)
-pdbLinesToRadical "MET" atoms = Methionine
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated SD atoms)
-  (createHydrated CE atoms)
-pdbLinesToRadical "PHE" atoms = Phenylalanine
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated CD1 atoms)
-  (createHydrated CD2 atoms)
-  (createHydrated CE1 atoms)
-  (createHydrated CE2 atoms)
-  (createHydrated CZ atoms)
-pdbLinesToRadical "TYR" atoms = Tyrosine
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated CD1 atoms)
-  (createHydrated CD2 atoms)
-  (createHydrated CE1 atoms)
-  (createHydrated CE2 atoms)
-  (createHydrated CZ atoms)
-  (createHydrated OH atoms)
-pdbLinesToRadical "TRP" atoms = Tryptophan
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated CD1 atoms)
-  (createHydrated CD2 atoms)
-  (createHydrated NE1 atoms)
-  (createHydrated CE2 atoms)
-  (createHydrated CE3 atoms)
-  (createHydrated CZ2 atoms)
-  (createHydrated CZ3 atoms)
-  (createHydrated CH2 atoms)
-pdbLinesToRadical "SER" atoms = Serine
-  (createHydrated CB atoms)
-  (createHydrated OG atoms)
-pdbLinesToRadical "THR" atoms = Threonine
-  (createHydrated CB atoms)
-  (createHydrated OG1 atoms)
-  (createHydrated CG2 atoms)
-pdbLinesToRadical "ASN" atoms = Asparagine
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated OD1 atoms)
-  (createHydrated ND2 atoms)
-pdbLinesToRadical "GLN" atoms = Glutamine
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated CD atoms)
-  (createHydrated OE1 atoms)
-  (createHydrated NE2 atoms)
-pdbLinesToRadical "CYS" atoms = Cysteine
-  (createHydrated CB atoms)
-  (createHydrated SG atoms)
-pdbLinesToRadical "PRO" atoms = Proline
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated CD atoms)
-pdbLinesToRadical "ARG" atoms = Arginine
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated CD atoms)
-  (createHydrated NE atoms)
-  (createHydrated CZ atoms)
-  (createHydrated NH1 atoms)
-  (createHydrated NH2 atoms)
-pdbLinesToRadical "HIS" atoms = Histidine
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated ND1 atoms)
-  (createHydrated CE1 atoms)
-  (createHydrated NE2 atoms)
-  (createHydrated CD2 atoms)
-pdbLinesToRadical "LYS" atoms = Lysine
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated CD atoms)
-  (createHydrated CE atoms)
-  (createHydrated NZ atoms)
-pdbLinesToRadical "ASP" atoms = AsparticAcid
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated OD1 atoms)
-  (createHydrated OD2 atoms)
-pdbLinesToRadical "GLU" atoms = GlutamicAcid
-  (createHydrated CB atoms)
-  (createHydrated CG atoms)
-  (createHydrated CD atoms)
-  (createHydrated OE1 atoms)
-  (createHydrated OE2 atoms)
+pdbLinesToRadical "VAL" atoms = createHydrated atoms <$> Valine CB CG1 CG2
+pdbLinesToRadical "ILE" atoms = createHydrated atoms <$> Isoleucine CB CG1 CG2 CD1
+pdbLinesToRadical "LEU" atoms = createHydrated atoms <$> Leucine CB CG CD1 CD2
+pdbLinesToRadical "MET" atoms = createHydrated atoms <$> Methionine CB CG SD CE
+pdbLinesToRadical "PHE" atoms = createHydrated atoms <$> Phenylalanine CB CG CD1 CD2 CE1 CE2 CZ
+pdbLinesToRadical "TYR" atoms = createHydrated atoms <$> Tyrosine CB CG CD1 CD2 CE1 CE2 CZ OH
+pdbLinesToRadical "TRP" atoms = createHydrated atoms <$> Tryptophan CB CG CD1 CD2 NE1 CE2 CE3 CZ2 CZ3 CH2
+pdbLinesToRadical "SER" atoms = createHydrated atoms <$> Serine CB OG
+pdbLinesToRadical "THR" atoms = createHydrated atoms <$> Threonine CB OG1 CG2
+pdbLinesToRadical "ASN" atoms = createHydrated atoms <$> Asparagine CB CG OD1 ND2
+pdbLinesToRadical "GLN" atoms = createHydrated atoms <$> Glutamine CB CG CD OE1 NE2
+pdbLinesToRadical "CYS" atoms = createHydrated atoms <$> Cysteine CB SG
+pdbLinesToRadical "PRO" atoms = createHydrated atoms <$> Proline CB CG CD
+pdbLinesToRadical "ARG" atoms = createHydrated atoms <$> Arginine CB CG CD NE CZ NH1 NH2
+pdbLinesToRadical "HIS" atoms = createHydrated atoms <$> Histidine CB CG ND1 CE1 NE2 CD2
+pdbLinesToRadical "LYS" atoms = createHydrated atoms <$> Lysine CB CG CD CE NZ
+pdbLinesToRadical "ASP" atoms = createHydrated atoms <$> AsparticAcid CB CG OD1 OD2
+pdbLinesToRadical "GLU" atoms = createHydrated atoms <$> GlutamicAcid CB CG CD OE1 OE2
 pdbLinesToRadical amino _ = error $ "Unknown amino acid code => " ++ amino

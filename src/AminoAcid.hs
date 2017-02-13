@@ -23,7 +23,7 @@ data AminoAcid a = AminoAcid { nitro       :: a
 
 data Radical a = Alanine a                      -- CB
                | Glysine                        -- nothing
-               | Valine a a a                   -- CB
+               | Valine a a a                   -- CB CG1 CG2
                | Isoleucine a a a a             -- CB CG1 CG2 CD1
                | Leucine a a a a                -- CB CG CD1 CD2
                | Methionine a a a a             -- CB CG SD CE
@@ -42,6 +42,28 @@ data Radical a = Alanine a                      -- CB
                | AsparticAcid a a a a           -- CB CG OD1 OD2
                | GlutamicAcid a a a a a         -- CB CG CD OE1 OE2
   deriving Show
+
+instance Functor Radical where
+  fmap f (Alanine cb)                = Alanine $ f cb
+  fmap _ Glysine                     = Glysine
+  fmap f (Valine cb cg1 cg2)         = Valine (f cb)  (f cg1)  (f cg2)
+  fmap f (Isoleucine cb cg1 cg2 cd1) = Isoleucine (f cb) (f cg1) (f cg2) (f cd1)
+  fmap f (Leucine cb cg cd1 cd2)     = Leucine (f cb) (f cg) (f cd1) (f cd2)
+  fmap f (Methionine cb cg sd ce)    = Methionine (f cb) (f cg) (f sd) (f ce)
+  fmap f (Phenylalanine cb cg cd1 cd2 ce1 ce2 cz) = Phenylalanine (f cb) (f cg) (f cd1) (f cd2) (f ce1) (f ce2) (f cz)
+  fmap f (Tyrosine cb cg cd1 cd2 ce1 ce2 cz oh) = Tyrosine (f cb) (f cg) (f cd1) (f cd2) (f ce1) (f ce2) (f cz) (f oh)
+  fmap f (Tryptophan cb cg cd1 cd2 ne1 ce2 ce3 cz2 cz3 ch2) = Tryptophan (f cb) (f cg) (f cd1) (f cd2) (f ne1) (f ce2) (f ce3) (f cz2) (f cz3) (f ch2)
+  fmap f (Serine cb og)              = Serine (f cb) (f og)
+  fmap f (Threonine cb og1 cg2)      = Threonine (f cb) (f og1) (f cg2)
+  fmap f (Asparagine cb cg od1 nd2)  = Asparagine (f cb) (f cg) (f od1) (f nd2)
+  fmap f (Glutamine cb cg cd oe1 ne2) = Glutamine (f cb) (f cg) (f cd) (f oe1) (f ne2)
+  fmap f (Cysteine cb sg)            = Cysteine (f cb) (f sg)
+  fmap f (Proline cb cg cd)          = Proline (f cb) (f cg) (f cd)
+  fmap f (Arginine cb cg cd ne cz nh1 nh2) = Arginine (f cb) (f cg) (f cd) (f ne) (f cz) (f nh1) (f nh2)
+  fmap f (Histidine cb cg nd1 cd2 ce1 ne2) = Histidine (f cb) (f cg) (f nd1) (f cd2) (f ce1) (f ne2)
+  fmap f (Lysine cb cg cd ce nz)     = Lysine (f cb) (f cg) (f cd) (f ce) (f nz)
+  fmap f (AsparticAcid cb cg od1 od2) = AsparticAcid (f cb) (f cg) (f od1) (f od2)
+  fmap f (GlutamicAcid cb cg cd oe1 oe2) = GlutamicAcid (f cb) (f cg) (f cd) (f oe1) (f oe2)
 
 data Hydrated a = Hydrated a [a]
   deriving Show
@@ -71,7 +93,7 @@ atoms :: HydratedAminoAcid -> [AtomType]
 atoms aminoacid = [N, CA, C, O] ++ case radical aminoacid of
   Alanine       {} -> [CB]
   Glysine       {} -> []
-  Valine        {} -> [CB]
+  Valine        {} -> [CB, CG1, CG2]
   Isoleucine    {} -> [CB, CG1, CG2, CD1]
   Leucine       {} -> [CB, CG, CD1, CD2]
   Methionine    {} -> [CB, CG, SD, CE]
