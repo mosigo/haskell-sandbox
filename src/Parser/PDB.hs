@@ -3,31 +3,30 @@ module Parser.PDB
     , pdbLinesParser
     ) where
 
-import Data.Text as T (Text, pack, strip)
+import           Data.Text        as T (Text, pack, strip)
 
-import Text.Parsec ( many, count, noneOf, newline, try
-                   , anyChar, string
-                   , (<|>)
-                   )
-import Text.Parsec.Text (Parser)
+import           Control.Monad    (void)
+import           Text.Parsec      (anyChar, char, count, eof, many, noneOf,
+                                   string, try, (<|>))
+import           Text.Parsec.Text (Parser)
 
-data PDBLine = AtomLine  { atomSerial       :: Int     -- Atom  serial number.
-                         , atomName         :: Text    -- Atom name.
-                         , atomAltLoc       :: Char    -- Alternate location indicator.
-                         , atomResName      :: Text    -- Residue name.
-                         , atomChainID      :: Char    -- Chain identifier.
-                         , atomResSeq       :: Int     -- Residue sequence number.
-                         , atomICode        :: Char    -- Code for insertion of residues.
-                         , atomX            :: Float   -- Orthogonal coordinates for X in Angstroms.
-                         , atomY            :: Float   -- Orthogonal coordinates for Y in Angstroms.
-                         , atomZ            :: Float   -- Orthogonal coordinates for Z in Angstroms.
-                         , atomOccupancy    :: Float   -- Occupancy.
-                         , atomTempFactor   :: Float   -- Temperature  factor.
-                         , atomElement      :: Text    -- Element symbol, right-justified.
-                         , atomCharge       :: Text    -- Charge  on the atom.
+data PDBLine = AtomLine  { atomSerial     :: Int     -- Atom  serial number.
+                         , atomName       :: Text    -- Atom name.
+                         , atomAltLoc     :: Char    -- Alternate location indicator.
+                         , atomResName    :: Text    -- Residue name.
+                         , atomChainID    :: Char    -- Chain identifier.
+                         , atomResSeq     :: Int     -- Residue sequence number.
+                         , atomICode      :: Char    -- Code for insertion of residues.
+                         , atomX          :: Float   -- Orthogonal coordinates for X in Angstroms.
+                         , atomY          :: Float   -- Orthogonal coordinates for Y in Angstroms.
+                         , atomZ          :: Float   -- Orthogonal coordinates for Z in Angstroms.
+                         , atomOccupancy  :: Float   -- Occupancy.
+                         , atomTempFactor :: Float   -- Temperature  factor.
+                         , atomElement    :: Text    -- Element symbol, right-justified.
+                         , atomCharge     :: Text    -- Charge  on the atom.
                          }
-             | OtherLine { otherHeader      :: Text
-                         , otherText        :: Text
+             | OtherLine { otherHeader :: Text
+                         , otherText   :: Text
                          }
              deriving (Show)
 
@@ -35,7 +34,7 @@ pdbLinesParser :: Parser [PDBLine]
 pdbLinesParser = many (atomLineP <|> otherLineP)
 
 otherLineP :: Parser PDBLine
-otherLineP = OtherLine . T.strip . T.pack <$> count 6 anyChar <*> (pack <$> (many (noneOf ['\n']) <* newline))
+otherLineP = OtherLine . T.strip . T.pack <$> count 6 anyChar <*> (pack <$> otherLineSymbols)
 
 atomLineP :: Parser PDBLine
 atomLineP = AtomLine <$> (try (string "ATOM  ")                                   -- (1 -  6)
@@ -53,4 +52,10 @@ atomLineP = AtomLine <$> (try (string "ATOM  ")                                 
                      <*> (read <$> count 6 anyChar)                               -- (61 - 66) atomTempFactor
                      <*> (strip . pack <$> (count 10 anyChar *> count 2 anyChar)) -- (77 - 78) atomElement
                      <*> (strip . pack <$> count 2 anyChar                        -- (79 - 80) atomCharge
-                            <* (many (noneOf ['\n']) <* newline))
+                            <* otherLineSymbols)
+
+eol :: Parser ()
+eol = void (char '\n') <|> eof
+
+otherLineSymbols :: Parser String
+otherLineSymbols = many (noneOf ['\n']) <* eol

@@ -1,10 +1,10 @@
 module Main where
 
-import System.Environment (getArgs)
-import Text.Parsec (parse)
-import qualified Data.Text.IO as TIO (readFile)
-import AminoAcidPDB (pdbAminoParser)
-import AminoAcid (HydratedAminoAcid)
+import           AminoAcid          (HydratedAminoAcid)
+import           AminoAcidPDB       (pdbAminoParser)
+import qualified Data.Text.IO       as TIO (readFile)
+import           System.Environment (getArgs)
+import           Text.Parsec        (parse)
 
 main :: IO ()
 main = do

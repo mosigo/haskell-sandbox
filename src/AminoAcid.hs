@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module AminoAcid
         ( AminoAcid (..)
         , Radical (..)
@@ -10,7 +12,8 @@ module AminoAcid
         , atoms
         ) where
 
-import Linear.V3 (V3)
+import           Data.Data (Data, Typeable, toConstr)
+import           Linear.V3 (V3)
 
 data AminoAcid a = AminoAcid { nitro       :: a
                              , carbonAlpha :: a
@@ -19,7 +22,19 @@ data AminoAcid a = AminoAcid { nitro       :: a
                              , oxi         :: Maybe a
                              , radical     :: Radical a
                              }
-  deriving Show
+
+instance (Show a, Data a) => Show (AminoAcid a) where
+  show (AminoAcid nitro' carbonAlpha' carbon' oxi2' oxi' radical') =
+    show (toConstr radical') ++ baseAtoms
+    where baseAtoms = "\n  N   " ++ show nitro' ++
+                      "\n  CA  " ++ show carbonAlpha' ++
+                      "\n  C   " ++ show carbon' ++
+                      "\n  O   " ++ show oxi2' ++
+                      (case oxi' of
+                          Nothing -> ""
+                          Just v  -> "\n  OXT " ++ show v) ++
+                      "\n  R " ++ show radical'
+
 
 data Radical a = Alanine a                      -- CB
                | Glysine                        -- nothing
@@ -41,32 +56,122 @@ data Radical a = Alanine a                      -- CB
                | Lysine a a a a a               -- CB CG CD CE NZ
                | AsparticAcid a a a a           -- CB CG OD1 OD2
                | GlutamicAcid a a a a a         -- CB CG CD OE1 OE2
-  deriving Show
+  deriving (Typeable, Data)
+
+instance (Show a) => Show (Radical a) where
+  show Glysine                                            = ""
+  show (Alanine cb)                                       = "CB  " ++ show cb
+  show (Valine cb cg1 cg2)                                = "CB  " ++ show cb ++
+                                                          "\n    CG1 " ++ show cg1 ++
+                                                          "\n    CG2 " ++ show cg2
+  show (Isoleucine cb cg1 cg2 cd1)                        = "CB  " ++ show cb ++
+                                                          "\n    CG1 " ++ show cg1 ++
+                                                          "\n    CG2 " ++ show cg2 ++
+                                                          "\n    CD1 " ++ show cd1
+  show (Leucine cb cg cd1 cd2)                            = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    CD1 " ++ show cd1 ++
+                                                          "\n    CD2 " ++ show cd2
+  show (Methionine cb cg sd ce)                           = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    SD  " ++ show sd ++
+                                                          "\n    CE  " ++ show ce
+  show (Phenylalanine cb cg cd1 cd2 ce1 ce2 cz)           = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    CD1 " ++ show cd1 ++
+                                                          "\n    CD2 " ++ show cd2 ++
+                                                          "\n    CE1 " ++ show ce1 ++
+                                                          "\n    CE2 " ++ show ce2 ++
+                                                          "\n    CZ  " ++ show cz
+  show (Tyrosine cb cg cd1 cd2 ce1 ce2 cz oh)             = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    CD1 " ++ show cd1 ++
+                                                          "\n    CD2 " ++ show cd2 ++
+                                                          "\n    CE1 " ++ show ce1 ++
+                                                          "\n    CE2 " ++ show ce2 ++
+                                                          "\n    CZ  " ++ show cz ++
+                                                          "\n    OH  " ++ show oh
+  show (Tryptophan cb cg cd1 cd2 ne1 ce2 ce3 cz2 cz3 ch2) = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    CD1 " ++ show cd1 ++
+                                                          "\n    CD2 " ++ show cd2 ++
+                                                          "\n    NE1 " ++ show ne1 ++
+                                                          "\n    CE2 " ++ show ce2 ++
+                                                          "\n    CE3 " ++ show ce3 ++
+                                                          "\n    CZ2 " ++ show cz2 ++
+                                                          "\n    CZ3 " ++ show cz3 ++
+                                                          "\n    CH2 " ++ show ch2
+  show (Serine cb og)                                     = "CB  " ++ show cb ++
+                                                          "\n    OG  " ++ show og
+  show (Threonine cb og1 cg2)                             = "CB  " ++ show cb ++
+                                                          "\n    OG1 " ++ show og1 ++
+                                                          "\n    CG2 " ++ show cg2
+  show (Asparagine cb cg od1 nd2)                         = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    OD1 " ++ show od1 ++
+                                                          "\n    ND2 " ++ show nd2
+  show (Glutamine cb cg cd oe1 ne2)                       = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    CD  " ++ show cd ++
+                                                          "\n    OE1 " ++ show oe1 ++
+                                                          "\n    NE2 " ++ show ne2
+  show (Cysteine cb sg)                                   = "CB  " ++ show cb ++
+                                                          "\n    SG  " ++ show sg
+  show (Proline cb cg cd)                                 = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    CD  " ++ show cd
+  show (Arginine cb cg cd ne cz nh1 nh2)                  = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    CD  " ++ show cd ++
+                                                          "\n    NE  " ++ show ne ++
+                                                          "\n    CZ  " ++ show cz ++
+                                                          "\n    NH1 " ++ show nh1 ++
+                                                          "\n    NH2 " ++ show nh2
+  show (Histidine cb cg nd1 cd2 ce1 ne2)                  = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    ND1 " ++ show nd1 ++
+                                                          "\n    CD2 " ++ show cd2 ++
+                                                          "\n    CE1 " ++ show ce1 ++
+                                                          "\n    NE2 " ++ show ne2
+  show (Lysine cb cg cd ce nz)                            = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    CD  " ++ show cd ++
+                                                          "\n    CE  " ++ show ce ++
+                                                          "\n    NZ  " ++ show nz
+  show (AsparticAcid cb cg od1 od2)                       = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    OD1 " ++ show od1 ++
+                                                          "\n    OD2 " ++ show od2
+  show (GlutamicAcid cb cg cd oe1 oe2)                    = "CB  " ++ show cb ++
+                                                          "\n    CG  " ++ show cg ++
+                                                          "\n    CD  " ++ show cd ++
+                                                          "\n    OE1 " ++ show oe1 ++
+                                                          "\n    OE2 " ++ show oe2
 
 instance Functor Radical where
-  fmap f (Alanine cb)                = Alanine $ f cb
-  fmap _ Glysine                     = Glysine
-  fmap f (Valine cb cg1 cg2)         = Valine (f cb)  (f cg1)  (f cg2)
-  fmap f (Isoleucine cb cg1 cg2 cd1) = Isoleucine (f cb) (f cg1) (f cg2) (f cd1)
-  fmap f (Leucine cb cg cd1 cd2)     = Leucine (f cb) (f cg) (f cd1) (f cd2)
-  fmap f (Methionine cb cg sd ce)    = Methionine (f cb) (f cg) (f sd) (f ce)
-  fmap f (Phenylalanine cb cg cd1 cd2 ce1 ce2 cz) = Phenylalanine (f cb) (f cg) (f cd1) (f cd2) (f ce1) (f ce2) (f cz)
-  fmap f (Tyrosine cb cg cd1 cd2 ce1 ce2 cz oh) = Tyrosine (f cb) (f cg) (f cd1) (f cd2) (f ce1) (f ce2) (f cz) (f oh)
+  fmap f (Alanine cb)                                       = Alanine $ f cb
+  fmap _ Glysine                                            = Glysine
+  fmap f (Valine cb cg1 cg2)                                = Valine (f cb)  (f cg1)  (f cg2)
+  fmap f (Isoleucine cb cg1 cg2 cd1)                        = Isoleucine (f cb) (f cg1) (f cg2) (f cd1)
+  fmap f (Leucine cb cg cd1 cd2)                            = Leucine (f cb) (f cg) (f cd1) (f cd2)
+  fmap f (Methionine cb cg sd ce)                           = Methionine (f cb) (f cg) (f sd) (f ce)
+  fmap f (Phenylalanine cb cg cd1 cd2 ce1 ce2 cz)           = Phenylalanine (f cb) (f cg) (f cd1) (f cd2) (f ce1) (f ce2) (f cz)
+  fmap f (Tyrosine cb cg cd1 cd2 ce1 ce2 cz oh)             = Tyrosine (f cb) (f cg) (f cd1) (f cd2) (f ce1) (f ce2) (f cz) (f oh)
   fmap f (Tryptophan cb cg cd1 cd2 ne1 ce2 ce3 cz2 cz3 ch2) = Tryptophan (f cb) (f cg) (f cd1) (f cd2) (f ne1) (f ce2) (f ce3) (f cz2) (f cz3) (f ch2)
-  fmap f (Serine cb og)              = Serine (f cb) (f og)
-  fmap f (Threonine cb og1 cg2)      = Threonine (f cb) (f og1) (f cg2)
-  fmap f (Asparagine cb cg od1 nd2)  = Asparagine (f cb) (f cg) (f od1) (f nd2)
-  fmap f (Glutamine cb cg cd oe1 ne2) = Glutamine (f cb) (f cg) (f cd) (f oe1) (f ne2)
-  fmap f (Cysteine cb sg)            = Cysteine (f cb) (f sg)
-  fmap f (Proline cb cg cd)          = Proline (f cb) (f cg) (f cd)
-  fmap f (Arginine cb cg cd ne cz nh1 nh2) = Arginine (f cb) (f cg) (f cd) (f ne) (f cz) (f nh1) (f nh2)
-  fmap f (Histidine cb cg nd1 cd2 ce1 ne2) = Histidine (f cb) (f cg) (f nd1) (f cd2) (f ce1) (f ne2)
-  fmap f (Lysine cb cg cd ce nz)     = Lysine (f cb) (f cg) (f cd) (f ce) (f nz)
-  fmap f (AsparticAcid cb cg od1 od2) = AsparticAcid (f cb) (f cg) (f od1) (f od2)
-  fmap f (GlutamicAcid cb cg cd oe1 oe2) = GlutamicAcid (f cb) (f cg) (f cd) (f oe1) (f oe2)
+  fmap f (Serine cb og)                                     = Serine (f cb) (f og)
+  fmap f (Threonine cb og1 cg2)                             = Threonine (f cb) (f og1) (f cg2)
+  fmap f (Asparagine cb cg od1 nd2)                         = Asparagine (f cb) (f cg) (f od1) (f nd2)
+  fmap f (Glutamine cb cg cd oe1 ne2)                       = Glutamine (f cb) (f cg) (f cd) (f oe1) (f ne2)
+  fmap f (Cysteine cb sg)                                   = Cysteine (f cb) (f sg)
+  fmap f (Proline cb cg cd)                                 = Proline (f cb) (f cg) (f cd)
+  fmap f (Arginine cb cg cd ne cz nh1 nh2)                  = Arginine (f cb) (f cg) (f cd) (f ne) (f cz) (f nh1) (f nh2)
+  fmap f (Histidine cb cg nd1 cd2 ce1 ne2)                  = Histidine (f cb) (f cg) (f nd1) (f cd2) (f ce1) (f ne2)
+  fmap f (Lysine cb cg cd ce nz)                            = Lysine (f cb) (f cg) (f cd) (f ce) (f nz)
+  fmap f (AsparticAcid cb cg od1 od2)                       = AsparticAcid (f cb) (f cg) (f od1) (f od2)
+  fmap f (GlutamicAcid cb cg cd oe1 oe2)                    = GlutamicAcid (f cb) (f cg) (f cd) (f oe1) (f oe2)
 
 data Hydrated a = Hydrated a [a]
-  deriving Show
+  deriving (Show, Typeable, Data)
 
 data AtomType = N   | CA  | C   | O  | OXT
               | CB
@@ -85,7 +190,7 @@ data AtomType = N   | CA  | C   | O  | OXT
               | NE  | NE1 | NE2
               | NZ
               | NH1 | NH2
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Ord)
 
 type HydratedAminoAcid = AminoAcid (Hydrated (V3 Float))
 
